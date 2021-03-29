@@ -399,9 +399,9 @@ private extension Renderer {
             let colors = point.color
             
             // 4
-            let red = colors.x * 255.0
-            let green = colors.y * 255.0
-            let blue = colors.z * 255.0
+            let red = Int(colors.x * 255.0).clamped(to: 0...255)
+            let green = Int(colors.y * 255.0).clamped(to: 0...255)
+            let blue = Int(colors.z * 255.0).clamped(to: 0...255)
             
             // 5
             let pvValue = "\(point.position.x) \(point.position.y) \(point.position.z) \(Int(red)) \(Int(green)) \(Int(blue)) 255"
@@ -421,5 +421,10 @@ private extension Renderer {
             print("Failed to write PLY file", error)
         }
     }
-    
+}
+
+extension Comparable {
+    func clamped(to limits: ClosedRange<Self>) -> Self {
+        return min(max(self, limits.lowerBound), limits.upperBound)
+    }
 }
