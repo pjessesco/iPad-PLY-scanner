@@ -65,6 +65,18 @@ final class ViewController: UIViewController, ARSessionDelegate {
             stackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             stackView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -50)
         ])
+        
+        // Setup a save button
+        let button = UIButton(type: .system, primaryAction: UIAction(title: "Save", handler: { (action) in
+            self.renderer.savePointsToFile()
+        }))
+        button.translatesAutoresizingMaskIntoConstraints = false
+        self.view.addSubview(button)
+        NSLayoutConstraint.activate([
+            button.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
+            button.centerYAnchor.constraint(equalTo: self.view.centerYAnchor)
+        ])
+    
     }
     
     override func viewWillAppear(_ animated: Bool) {

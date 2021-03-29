@@ -11,7 +11,7 @@ import ARKit
 
 final class Renderer {
     // Maximum number of points we store in the point cloud
-    private let maxPoints = 500_000
+    private let maxPoints = 100_000_00
     // Number of sample points on the grid
     private let numGridPoints = 500
     // Particle's size in pixels
@@ -175,6 +175,10 @@ final class Renderer {
                 return
         }
         
+//        commandBuffer.addCompletedHandler { [self] _ in
+//            print(particlesBuffer[9].position) // Prints the 10th particles position
+//        }
+        
         _ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
         commandBuffer.addCompletedHandler { [weak self] commandBuffer in
             if let self = self {
@@ -252,6 +256,10 @@ final class Renderer {
         currentPointIndex = (currentPointIndex + gridPointsBuffer.count) % maxPoints
         currentPointCount = min(currentPointCount + gridPointsBuffer.count, maxPoints)
         lastCameraTransform = frame.camera.transform
+    }
+    
+    public func exportMesh(){
+        
     }
 }
 
@@ -372,4 +380,46 @@ private extension Renderer {
         let rotationAngle = Float(cameraToDisplayRotation(orientation: orientation)) * .degreesToRadian
         return flipYZ * matrix_float4x4(simd_quaternion(rotationAngle, Float3(0, 0, 1)))
     }
+    
+    public func savePointsToFile() {
+    
+        // 1
+        var fileToWrite = ""
+        let headers = ["ply", "format ascii 1.0", "element vertex \(currentPointCount)", "property float x", "property float y", "property float z", "property uchar red", "property uchar green", "property uchar blue", "property uchar alpha", "element face 0", "property list uchar int vertex_indices", "end_header"]
+        for header in headers {
+            fileToWrite += header
+            fileToWrite += "\r\n"
+        }
+        
+        // 2
+        for i in 0..<currentPointCount {
+        
+            // 3
+            let point = particlesBuffer[i]
+            let colors = point.color
+            
+            // 4
+            let red = colors.x * 255.0
+            let green = colors.y * 255.0
+            let blue = colors.z * 255.0
+            
+            // 5
+            let pvValue = "\(point.position.x) \(point.position.y) \(point.position.z) \(Int(red)) \(Int(green)) \(Int(blue)) 255"
+            fileToWrite += pvValue
+            fileToWrite += "\r\n"
+        }
+        // 6
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        let documentsDirectory = paths[0]
+        let file = documentsDirectory.appendingPathComponent("ply_\(UUID().uuidString).ply")
+        
+        do {
+            // 7
+            try fileToWrite.write(to: file, atomically: true, encoding: String.Encoding.ascii)
+        }
+        catch {
+            print("Failed to write PLY file", error)
+        }
+    }
+    
 }
